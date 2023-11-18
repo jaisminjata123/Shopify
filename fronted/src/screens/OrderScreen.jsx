@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import {Link,useParams} from 'react-router-dom';
-import {Row,Col,ListGroup,Image, Form, Button,Card, ListGroupItem} from 'react-bootstrap';
+import {Row,Col,ListGroup,Image, Form, Button,Card} from 'react-bootstrap';
 import Message from '../components/Message';
 import Loader from '../components/Loader';
 import {PayPalButtons,usePayPalScriptReducer} from '@paypal/react-paypal-js';
@@ -18,13 +18,26 @@ const OrderScreen = () => {
 
     const {data:paypal,
         isLoading:loadingPayPal,
-        error:errorPayPal} = useGetOrderDetailsQuery
+        error:errorPayPal} = useGetPayPalClientIdQuery();
 
     const {userInfo} = useSelector((state)=> state.auth);
-    {console.log(order,"ORDERINFO")}
+    {
+        if(!errorPayPal&&!loadingPayPal&&paypal?.clientId)
+        {
+            console.log(paypal?.clientId,"clientId")
+        }
+    }
+
     useEffect(()=>{
+            
+            if(!errorPayPal&&!loadingPayPal)
+            {
+                console.log('No error',{paypal})
+            }
+          
             if(!errorPayPal&&!loadingPayPal&&paypal?.clientId)
             {
+                console.log(paypal?.clientId,"ID")
                 const loadPayPalScript = async()=>{
                     paypalDispatch({
                         type:'resetOptions',
@@ -66,21 +79,38 @@ const OrderScreen = () => {
         });
 
     }
-    function onApproveTest()
+   async function onApproveTest()
     {
+        await payOrder({
+            orderId,details:{payer:{}}
+        });
+        refetch();
+        toast.success('Payment Successful')
 
     }
-    function createOrder()
+    function createOrder(data,actions)
     {
-
+        return actions.order.create({
+            purchase_units:[
+                {
+                    amount:{
+                        value:order.totalPrice,
+                    }
+                }
+            ]
+        }).then((orderId)=>{
+            return orderId;
+        });
     }
-    function onError()
+    function onError(error)
     {
-
+        toast.error(error.message)
     }
   return  isLoading?<Loader/> : error?<Message variant ="danger"/>:
   (
     <>
+     {/* <h1>PayPal button</h1>
+    <PayPalButtons></PayPalButtons> */}
         <h1>Order {order._id}</h1>
         <Row>
             <Col md={8}>
@@ -220,9 +250,9 @@ const OrderScreen = () => {
                             }
                             {isPending? <Loader/>:(
                                 <div>
-                                    <Button onclick={onApproveTest} style={{marginBottom:'10px'}}>
+                                    {/* <Button onClick={onApproveTest} style={{marginBottom:'10px'}}>
                                         Test Pay Order
-                                    </Button>
+                                    </Button> */}
                                     <div>
                                         <PayPalButtons createOrder={createOrder}
                                         onApprove={onApprove}

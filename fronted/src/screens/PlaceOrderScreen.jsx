@@ -9,10 +9,11 @@ import Message from "../components/Message";
 import Loader from "../components/Loader";
 import {useCreateOrderMutation} from '../slices/ordersApiSlice';
 import { clearCartItems } from "../slices/cartSlice";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 
 
 const PlaceOrderScreen = () => {
-
+ 
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const cart = useSelector((state)=>state.cart);
@@ -49,6 +50,7 @@ const PlaceOrderScreen = () => {
      }
   return (
     <>
+   
         <CheckoutSteps step1 step2 step3 step4/>
         <Row>
             <Col md={8}>
